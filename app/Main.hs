@@ -1,4 +1,8 @@
 module Main where
+import           Animation.State                ( DirectionX(..)
+                                                , DirectionY(..)
+                                                , GameState(..)
+                                                )
 import           Control.Concurrent             ( forkIO
                                                 , newEmptyMVar
                                                 , putMVar
@@ -17,9 +21,9 @@ import           Data.List
 import           System.IO                      ( BufferMode(..)
                                                 , hFlush
                                                 , hSetBuffering
-                                                , stdout
-                                                , stdin
                                                 , hSetEcho
+                                                , stdin
+                                                , stdout
                                                 )
 
 createBall :: Int -> Int -> [Char]
@@ -52,18 +56,7 @@ getCommnads c | c == 'w'  = putStrLn $ unlines $ createBox 10 10 (7, 4)
               | c == 'd'  = putStrLn $ unlines $ createBox 10 10 (7, 4)
               | otherwise = putStrLn "wrong input"
 
-data DirectionY = GoUp | GoDown deriving (Show, Enum, Eq)
-data DirectionX = GoLeft | GoRight deriving (Show, Enum, Eq)
 
-data GameState = GameState
-  { box        :: String
-  , board      :: String
-  , boardPos   :: Int
-  , ballPos    :: (Int, Int)
-  , directionY :: DirectionY
-  , directionX :: DirectionX
-  }
-  deriving Show
 initGameSate = GameState { box        = ""
                          , board      = ""
                          , boardPos   = 0
@@ -90,7 +83,7 @@ combinations n xs =
 
 mainGame :: ReaderT Env (StateT GameState IO) String
 mainGame = do
-  
+
   e      <- ask
   st     <- get
   newVar <- lift $ lift newEmptyMVar
@@ -203,7 +196,7 @@ mainGame = do
         let board = createBoard (boardPos state) (column env) (boardSize env)
         lift $ lift clean
         lift $ lift $ putStrLn (box' ++ "\n" ++ board)
-        
+
         newState <- get
         wait threadVar env newState
 
@@ -235,7 +228,7 @@ ballGame = do
 
 
 main = do
-  hSetEcho stdin False
+  --hSetEcho stdin False
   runStateT (runReaderT mainGame initEnv) initGameSate
 
 callGame initEnv initGameState = do
