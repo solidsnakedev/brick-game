@@ -228,9 +228,26 @@ ballGame = do
 
 
 main = do
-  --hSetEcho stdin False
+  hSetEcho stdin False
+  hSetBuffering stdin NoBuffering
   runStateT (runReaderT mainGame initEnv) initGameSate
+  --mainTest'
+  {-newVar <- newEmptyMVar
 
+  forkIO
+    $  do
+    x <- getChar
+    putMVar newVar True
+
+  waitForIO newVar
+
+ where
+  waitForIO x = do
+    val <- tryTakeMVar x
+    case val of
+      Just v  -> putStrLn "Second thread ended"
+      Nothing -> putStrLn "main thread" >> waitForIO x
+-}
 callGame initEnv initGameState = do
   (box, st) <- runStateT (runReaderT ballGame initEnv) initGameState
   putStrLn box
