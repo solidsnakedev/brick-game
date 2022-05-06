@@ -18,6 +18,8 @@ import           System.IO                      ( BufferMode(..)
                                                 , hFlush
                                                 , hSetBuffering
                                                 , stdout
+                                                , stdin
+                                                , hSetEcho
                                                 )
 
 createBall :: Int -> Int -> [Char]
@@ -88,6 +90,7 @@ combinations n xs =
 
 mainGame :: ReaderT Env (StateT GameState IO) String
 mainGame = do
+  
   e      <- ask
   st     <- get
   newVar <- lift $ lift newEmptyMVar
@@ -103,6 +106,7 @@ mainGame = do
 
  where
   wait threadVar env state = do
+    lift $ lift $ threadDelay (1000000 `div` 3)
     mVar <- lift $ lift $ tryTakeMVar threadVar
     case mVar of
       Just var -> case var of
@@ -131,7 +135,7 @@ mainGame = do
                           , directionY = directionY'
                           , directionX = directionX'
                           }
-
+          lift $ lift clean
           -- Print board and box
           lift $ lift $ putStrLn (box' ++ "\n" ++ board)
           -- return to Game
@@ -162,6 +166,7 @@ mainGame = do
                           , directionX = directionX'
                           }
           -- Print board and box
+          lift $ lift clean
           lift $ lift $ putStrLn (box' ++ "\n" ++ board)
           mainGame
         'q' -> do
@@ -169,9 +174,10 @@ mainGame = do
         _ -> do
           let board = createBoard (boardPos state) (column env) (boardSize env)
           let box'  = unlines $ createBox (column env) (row env) (ballPos state)
+          lift $ lift clean
           lift $ lift $ putStrLn (box' ++ "\n" ++ board)
-          lift $ lift $ threadDelay 100000
-          wait threadVar env state
+          --lift $ lift $ threadDelay 100000
+          mainGame
       Nothing -> do
                 -- Render Box
         let (posX, posY) = ballPos state
@@ -195,9 +201,9 @@ mainGame = do
                         }
 
         let board = createBoard (boardPos state) (column env) (boardSize env)
-
+        lift $ lift clean
         lift $ lift $ putStrLn (box' ++ "\n" ++ board)
-        lift $ lift $ threadDelay 1000000
+        
         newState <- get
         wait threadVar env newState
 
@@ -229,7 +235,8 @@ ballGame = do
 
 
 main = do
-  runStateT (runReaderT ballGame initEnv) initGameSate
+  hSetEcho stdin False
+  runStateT (runReaderT mainGame initEnv) initGameSate
 
 callGame initEnv initGameState = do
   (box, st) <- runStateT (runReaderT ballGame initEnv) initGameState
