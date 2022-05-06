@@ -17,9 +17,9 @@ import           Data.List
 import           System.IO                      ( BufferMode(..)
                                                 , hFlush
                                                 , hSetBuffering
-                                                , stdout
-                                                , stdin
                                                 , hSetEcho
+                                                , stdin
+                                                , stdout
                                                 )
 
 createBall :: Int -> Int -> [Char]
@@ -90,7 +90,7 @@ combinations n xs =
 
 mainGame :: ReaderT Env (StateT GameState IO) String
 mainGame = do
-  
+
   e      <- ask
   st     <- get
   newVar <- lift $ lift newEmptyMVar
@@ -203,7 +203,7 @@ mainGame = do
         let board = createBoard (boardPos state) (column env) (boardSize env)
         lift $ lift clean
         lift $ lift $ putStrLn (box' ++ "\n" ++ board)
-        
+
         newState <- get
         wait threadVar env newState
 
@@ -236,8 +236,25 @@ ballGame = do
 
 main = do
   hSetEcho stdin False
+  hSetBuffering stdin NoBuffering
   runStateT (runReaderT mainGame initEnv) initGameSate
+  --mainTest'
+  {-newVar <- newEmptyMVar
 
+  forkIO
+    $  do
+    x <- getChar
+    putMVar newVar True
+
+  waitForIO newVar
+
+ where
+  waitForIO x = do
+    val <- tryTakeMVar x
+    case val of
+      Just v  -> putStrLn "Second thread ended"
+      Nothing -> putStrLn "main thread" >> waitForIO x
+-}
 callGame initEnv initGameState = do
   (box, st) <- runStateT (runReaderT ballGame initEnv) initGameState
   putStrLn box
