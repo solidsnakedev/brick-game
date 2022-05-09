@@ -1,9 +1,15 @@
 module Animation
-  ( module Animation.Env
-  , module Animation.Render
+  ( Env(..)
+  , initEnv
   , GameState(..)
   , DirectionX(..)
   , DirectionY(..)
+  , initGameSate
+  , createBoard
+  , createBox
+  , cleanScreen
+  , animationHelper
+  , render
   , module Animation.Type
   ) where
 

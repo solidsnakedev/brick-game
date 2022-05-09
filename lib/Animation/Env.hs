@@ -1,4 +1,10 @@
-module Animation.Env where
+module Animation.Env (Env(..), initEnv) where
 
-env = do
-  putStrLn "String"
+data Env = Env
+  { column    :: Int
+  , row       :: Int
+  , boardSize :: Int
+  }
+  deriving Show
+
+initEnv = Env 10 10 3
