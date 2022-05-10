@@ -1,14 +1,9 @@
 module Main where
-import           Animation                      ( DirectionX(..)
-                                                , DirectionY(..)
-                                                , Env(..)
+import           Animation                      ( Env(..)
                                                 , GameState(..)
-                                                , createBoard
-                                                , createBox
-                                                , initEnv
+                                                , initGameEnv
                                                 , initGameSate
-                                                , cleanScreen
-                                                , animationHelper
+                                                , updateState
                                                 , render
                                                 )
 
@@ -55,36 +50,28 @@ mainGame = do
     case mVar of
       Just var -> case var of
         'a' -> do
-          -- Update Game State
-          animationHelper (-1)
-          -- Render Game
-          render
-          -- Return to Game
-          mainGame
+          updateState (-1) -- Update Game State
+          render -- Render Game
+          mainGame -- Return to Game
         'd' -> do
-          -- Update Game State          
-          animationHelper (1)
-          -- Render Game
-          render
-          -- Return to Game
-          mainGame
+          updateState (1) -- Update Game State 
+          render -- Render Game
+          mainGame -- Return to Game
         'q' -> do
           return ""
         _ -> do
-          -- Render Game
-          render
-          --lift $ lift $ threadDelay 100000
+          render -- Render Game
           mainGame
       Nothing -> do
-        -- Update Game State
-        animationHelper (0)
-        -- Render Game
-        render
-
-        wait threadVar
+        updateState (0) -- Update Game State
+        render -- Render Game
+        st <- lift get
+        if gameStatus st then
+          wait threadVar
+          else return ""
 
 main = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
-  runStateT (runReaderT mainGame initEnv) initGameSate
+  runStateT (runReaderT mainGame initGameEnv) initGameSate
 

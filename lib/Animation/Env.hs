@@ -1,4 +1,4 @@
-module Animation.Env (Env(..), initEnv) where
+module Animation.Env (Env(..), initGameEnv) where
 
 data Env = Env
   { column    :: Int
@@ -7,4 +7,4 @@ data Env = Env
   }
   deriving Show
 
-initEnv = Env 10 10 3
+initGameEnv = Env 10 10 3

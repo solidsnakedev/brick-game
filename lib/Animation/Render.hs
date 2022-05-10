@@ -5,7 +5,6 @@ import           Control.Monad.State.Strict     ( MonadState(get, put)
                                                 , MonadTrans(lift)
                                                 , StateT(runStateT)
                                                 )
-import           Control.Monad.Trans.Maybe      ( )
 import           Control.Monad.Trans.Reader     ( ReaderT(runReaderT)
                                                 , ask
                                                 )
@@ -42,11 +41,11 @@ render = do
   state <- get
   env <- ask
   game <- renderHelper state env
-  lift $ lift cleanScreen
-  lift $ lift $ putStrLn game
+  --lift $ lift cleanScreen
+  lift $ lift $ putStrLn $ game ++ "\n"
 
 renderHelper :: GameState -> Env -> ReaderT Env (StateT GameState IO) String
 renderHelper state env = do
   let board        = createBoard (boardPos state) (column env) (boardSize env)
   let newBox  = createBox (column env) (row env) (ballPos state)
-  return (mconcat [newBox, board])
+  return (mconcat [newBox, board, show $ ballPos state , show $ boardPos state, show $ gameStatus state])

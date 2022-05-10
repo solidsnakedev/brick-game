@@ -1,16 +1,10 @@
 module Animation
   ( Env(..)
-  , initEnv
+  , initGameEnv
   , GameState(..)
-  , DirectionX(..)
-  , DirectionY(..)
   , initGameSate
-  , createBoard
-  , createBox
-  , cleanScreen
-  , animationHelper
+  , updateState
   , render
-  , module Animation.Type
   ) where
 
 import           Animation.Env
