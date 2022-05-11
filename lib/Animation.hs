@@ -5,6 +5,7 @@ module Animation
   , initGameSate
   , updateState
   , render
+  , render'
   ) where
 
 import           Animation.Env

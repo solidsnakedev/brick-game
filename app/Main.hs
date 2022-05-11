@@ -5,6 +5,7 @@ import           Animation                      ( Env(..)
                                                 , initGameSate
                                                 , updateState
                                                 , render
+                                                , render'
                                                 )
 
 import           Control.Concurrent             ( forkIO
@@ -52,19 +53,28 @@ mainGame = do
         'a' -> do
           updateState (-1) -- Update Game State
           render -- Render Game
-          mainGame -- Return to Game
+          st <- lift get
+          if gameStatus st then
+            mainGame
+            else return ""
         'd' -> do
           updateState (1) -- Update Game State 
           render -- Render Game
-          mainGame -- Return to Game
+          st <- lift get
+          if gameStatus st then
+            mainGame
+            else return ""
         'q' -> do
           return ""
         _ -> do
           render -- Render Game
-          mainGame
+          st <- lift get
+          if gameStatus st then
+            mainGame
+            else return ""
       Nothing -> do
         updateState (0) -- Update Game State
-        render -- Render Game
+        render' -- Render Game
         st <- lift get
         if gameStatus st then
           wait threadVar
