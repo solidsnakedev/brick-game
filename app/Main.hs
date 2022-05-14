@@ -73,8 +73,9 @@ mainGame = do
             mainGame
             else return ""
       Nothing -> do
-        updateState (0) -- Update Game State
         render' -- Render Game
+        updateState (0) -- Update Game State
+        --render' -- Render Game
         st <- lift get
         if gameStatus st then
           wait threadVar
