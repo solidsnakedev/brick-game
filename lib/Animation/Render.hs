@@ -129,16 +129,19 @@ render' = do
   state <- get
   env <- ask
   game <- renderHelper' state env
+  --lift $ lift cleanScreen
   lift $ lift $ putStrLn $ game ++ "\n"
 
 renderHelper' :: GameState -> Env -> ReaderT Env (StateT GameState IO) String
 renderHelper' state env =  do
   let board = createBoard (boardPos state) (column env) (boardSize env)
   let newBox = renderObject (objects state)
-  return (mconcat [newBox, board, show $ ballPos state
+  return (mconcat [newBox, board
+      , show $ ballPos state
       , show $ boardPos state
       , show $ gameStatus state
-      , show $ objects state])
+      , show $ objects state
+      , show $ collision state])
 
 renderHelper :: GameState -> Env -> ReaderT Env (StateT GameState IO) String
 renderHelper state env = do

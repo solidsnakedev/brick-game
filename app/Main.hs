@@ -73,13 +73,13 @@ mainGame = do
             mainGame
             else return ""
       Nothing -> do
-        render' -- Render Game
         updateState (0) -- Update Game State
+        render' -- Render Game
         --render' -- Render Game
         st <- lift get
         if gameStatus st then
           wait threadVar
-          else return ""
+          else do return ""
 
 main = do
   hSetEcho stdin False
