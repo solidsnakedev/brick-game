@@ -16,6 +16,7 @@ import           Control.Concurrent             ( forkIO
 import           Control.Monad.State.Strict     ( MonadState(get, put)
                                                 , MonadTrans(lift)
                                                 , StateT(runStateT)
+                                                , when
                                                 )
 import           Control.Monad.Trans.Maybe      ( )
 import           Control.Monad.Trans.Reader     ( ReaderT(runReaderT)
@@ -30,7 +31,7 @@ import           System.IO                      ( BufferMode(..)
                                                 , stdout
                                                 )
 
-mainGame :: ReaderT Env (StateT GameState IO) String
+mainGame :: ReaderT Env (StateT GameState IO) ()
 mainGame = do
   newVar <- lift $ lift newEmptyMVar
 
@@ -55,22 +56,22 @@ mainGame = do
           st <- lift get
           if gameStatus st then
             mainGame
-            else return ""
+            else lift $ lift $ putStrLn "Game Over!!"
         'd' -> do
           updateState (1) -- Update Game State 
           render -- Render Game
           st <- lift get
           if gameStatus st then
             mainGame
-            else return ""
+            else lift $ lift $ putStrLn "Game Over!!"
         'q' -> do
-          return ""
+          lift $lift $ putStrLn "End Game"
         _ -> do
           render -- Render Game
           st <- lift get
           if gameStatus st then
             mainGame
-            else return ""
+            else lift $ lift $ putStrLn "Game Over!!"
       Nothing -> do
         updateState (0) -- Update Game State
         render -- Render Game
@@ -78,7 +79,7 @@ mainGame = do
         st <- lift get
         if gameStatus st then
           wait threadVar
-          else do return ""
+          else lift $lift $ putStrLn "Game Over!!"
 
 main = do
   hSetEcho stdin False
