@@ -6,7 +6,9 @@ module Animation.State
   , ObjectType (..)
   , initGameSate
   , updateState
-  , obList
+  , obListMap
+  , calculateDirections
+  , calculatePositions
   ) where
 
 import           Animation.Env                  ( Env(..) )
@@ -39,35 +41,53 @@ data GameState = GameState
   , directionY :: DirectionY
   , directionX :: DirectionX
   , gameStatus :: Bool
-  , objects :: [Object]
-  , objectsMap :: Map.Map Int Object
-  , collision :: Bool
+  , objectsMap :: Map.Map String Object
+  , collisions :: [String]
+  , debug :: String
   }
   deriving Show
 
-obList :: [Object]
-obList =
-  [-- Object (1, 1) False Box
-  Object (9, 2) True Ball
-  --, Object (5, 2) False Box
-  --, Object (4, 8) False Box
-  --, Object (7, 8) False Box
-  --, Object (9, 8) False Box
-  --, Object (3, 8) False Box
-  , Object (1, 8) False Box
-  ]
-
-obListMap :: Map.Map Int Object
-obListMap = Map.fromList $ zip [1 .. length obList] obList
+obListMap :: Map.Map String Object
+obListMap = Map.fromList
+  [ ("ball", Object (9, 2) True Ball)
+  , ("box18", Object (1, 8) False Box)
+  , ("box33", Object (3, 3) False Box)
+  , ("box37", Object (3, 7) False Box)
+  , ("box81", Object (8, 1) False Box)
+  , ("box54", Object (5, 4) False Box)
+  , ("box16", Object (1, 6) False Box)
+  , ("box26", Object (2, 6) False Box)
+  , ("box36", Object (3, 6) False Box)
+  , ("box46", Object (4, 6) False Box)
+  , ("box56", Object (5, 6) False Box)
+  , ("box66", Object (6, 6) False Box)
+  , ("box76", Object (7, 6) False Box)
+  , ("box86", Object (8, 6) False Box)
+  , ("box15", Object (1, 5) False Box)
+  , ("box25", Object (2, 5) False Box)
+  , ("box35", Object (3, 5) False Box)
+  , ("box45", Object (4, 5) False Box)
+  , ("box55", Object (5, 5) False Box)
+  , ("box65", Object (6, 5) False Box)
+  , ("box75", Object (7, 5) False Box)
+  , ("box85", Object (8, 5) False Box)
+  , ("box12", Object (1, 2) False Box)
+  , ("box22", Object (2, 2) False Box)
+  , ("box32", Object (3, 2) False Box)
+  , ("box42", Object (4, 2) False Box)
+  , ("box52", Object (5, 2) False Box)
+  , ("box62", Object (6, 2) False Box)
+  , ("box72", Object (7, 2) False Box)
+  , ("box82", Object (8, 2) False Box)]
 
 initGameSate = GameState { boardPos   = 0
                          , ballPos    = (0, 0)
                          , directionY = GoUp
-                         , directionX = GoRight
+                         , directionX = GoLeft
                          , gameStatus = True
-                         , objects = obList
                          , objectsMap = obListMap
-                         , collision = False
+                         , collisions = []
+                         , debug = ""
                          }
 type KeyInput = Int
 
@@ -78,75 +98,89 @@ updateState keyInput = do
   let newState = updateHelper' keyInput env state
   lift $ put newState
 
-updateHelper :: KeyInput -> Env -> GameState -> GameState
-updateHelper keyInput (Env column row boardSize) (GameState boardPos ballPos directionY directionX gameStatus objects objectsMap collision)
-  = GameState { boardPos   = newBoardPos
-              , ballPos    = (newPosX, newPosY)
-              , directionY = newDirectionY
-              , directionX = newDirectionX
-              , gameStatus = newGameStatus
-              , objects = objects
-              , objectsMap = objectsMap
-              , collision = collision
-              }
- where
-  newBoardPos    = boardPos + keyInput -- (-1) left , (1) Right , 0 do nothing
--- New ball position
-  (posX, posY) = ballPos
-  newDirectionY  = case directionY of
-    GoUp -> if posY <= 0 then GoDown else GoUp
-    GoDown ->
-      if posY == row - 1 && (boardPosLeft <= posX && posX <= boardPosRight)
-      then
-        GoUp
-      else
-        GoDown
-  newDirectionX = case directionX of
-    GoLeft  -> if posX <= 0 then GoRight else GoLeft
-    GoRight -> if posX >= (column - 1) then GoLeft else GoRight
-  newPosY = if newDirectionY == GoDown then posY + 1 else posY - 1
-  newPosX = if newDirectionX == GoRight then posX + 1 else posX - 1
-  boardPosRight = newBoardPos + (boardSize `div` 2)
-  boardPosLeft =  newBoardPos - (boardSize `div` 2)
-  newGameStatus = newPosY < row
 
 updateHelper' :: KeyInput -> Env -> GameState -> GameState
-updateHelper' keyInput (Env column row boardSize) (GameState boardPos ballPos directionY directionX gameStatus objects objectsMap collision)
+updateHelper' keyInput env@(Env column row boardSize) state@(GameState boardPos ballPos directionY directionX gameStatus objectsMap collisions lookAheadPos)
   = GameState { boardPos   = newBoardPos
               , ballPos    = (newPosX, newPosY)
-              , directionY = newDirectionY
+              , directionY = newDirectionY'
               , directionX = newDirectionX
               , gameStatus = newGameStatus
-              , objects = newObjects
-              , objectsMap = objectsMap
-              , collision = newCollision
+              , objectsMap = newObjects
+              , collisions = newCollisions
+              , debug = mconcat [show newPosX, show newPosY]
               }
  where
   newBoardPos    = boardPos + keyInput -- (-1) left , (1) Right , 0 do nothing
 -- New ball position
-  (posX, posY) = head $ map objectPosition $ filter isBall objects
-  
-  newBoxes = if collision then [] else filter (not . isBall) objects
+  (posX, posY) = maybe (error "ball is missing") objectPosition (Map.lookup "ball" objectsMap)
+  --boxList = Map.elems $ Map.filterWithKey (\_ value -> not $ isBall value) obListMap
+
   newDirectionY  = case directionY of
-    GoUp -> if posY <= 0  then GoDown else GoUp
+    GoUp -> if posY <= 0
+      then GoDown else GoUp
     GoDown ->
-      if (posY == row-1  && (newBoardPos <= posX && posX <= (newBoardPos + boardSize))) || collision
+      if posY == row-1  && (newBoardPos <= posX && posX <= (newBoardPos + boardSize))
       then
         GoUp
       else
         GoDown
+  newDirectionY' = if detectCollision collisions then oppositeY newDirectionY else newDirectionY
+
   newDirectionX = case directionX of
     GoLeft  -> if posX <= 1  then GoRight else GoLeft
-    GoRight -> if posX >= column then GoLeft else GoRight
-  (newPosY, newPosY2) = if newDirectionY == GoDown then (posY + 1, posY + 2) else (posY - 1, posY - 2)
-  (newPosX, newPosX2) = if newDirectionX == GoRight then (posX + 1, posX + 2) else (posX - 1, posX -2)
-  boardPosRight = newBoardPos + (boardSize `div` 2)
-  boardPosLeft =  newBoardPos - (boardSize `div` 2)
+    GoRight -> if posX >= column  then GoLeft else GoRight
+  
+  newPosY = if newDirectionY' == GoDown then posY + 1 else abs (posY - 1)
+  newPosX = if newDirectionX == GoRight then posX + 1 else abs (posX - 1)
+
   -- collision to look ahead
-  collisions = map (\x -> (newPosX2, newPosY2) == objectPosition x ) $ filter (not . isBall) objects
-  newCollision = or collisions
+  newCollisions = Map.keys $ Map.filterWithKey (\key value -> key /= "ball" && (newPosX, newPosY) == objectPosition value ) objectsMap
+
+  newObjectsMap = deleteBoxes newCollisions objectsMap
 
   newGameStatus = newPosY < row
 
   newBallObject = Object (newPosX, newPosY) True Ball
-  newObjects = newBallObject : newBoxes
+  newObjects = Map.adjust (\_ -> newBallObject) "ball" newObjectsMap
+
+calculateDirections :: DirectionX -> DirectionY -> Int -> Int -> Int -> Int -> Int -> Int-> [String]-> (DirectionX, DirectionY)
+calculateDirections directionX directionY posX posY row column boardSize boardPos collisions = (newDirectionX, newDirectionY')
+  where
+    newDirectionY  = case directionY of
+      GoUp -> if posY <= 0 -- || not (null collisions)
+        then GoDown
+         else GoUp
+      GoDown ->
+        if (posY == row-1  && (boardPos <= posX && posX <= (boardPos + boardSize))) -- || not (null collisions)
+          then
+            GoUp
+            else
+        GoDown
+    newDirectionX = case directionX of
+      GoLeft  -> if posX <= 1  then GoRight else GoLeft
+      GoRight -> if posX >= column  then GoLeft else GoRight
+
+    newDirectionY' = if detectCollision collisions then oppositeY newDirectionY else newDirectionY
+
+calculatePositions :: DirectionX -> DirectionY -> Int -> Int -> (Int, Int)
+calculatePositions directionX directionY posX posY = (newPosX, newPosY)
+  where
+    newPosY = if directionY == GoDown then posY + 1 else abs (posY - 1)
+    newPosX = if directionX == GoRight then posX + 1 else abs (posX - 1)
+
+
+deleteBoxes :: Ord k => [k] -> Map.Map k a -> Map.Map k a
+deleteBoxes [] obMap = obMap
+deleteBoxes (x:xs) obMap = deleteBoxes xs (Map.delete x obMap)
+
+oppositeY :: DirectionY -> DirectionY
+oppositeY GoUp = GoDown
+oppositeY GoDown = GoUp
+
+oppositeX :: DirectionX -> DirectionX
+oppositeX GoRight = GoLeft
+oppositeX GoLeft = GoRight
+
+detectCollision :: [String] -> Bool
+detectCollision collisions = not (null collisions)

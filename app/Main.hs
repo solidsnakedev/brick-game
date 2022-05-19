@@ -5,7 +5,6 @@ import           Animation                      ( Env(..)
                                                 , initGameSate
                                                 , updateState
                                                 , render
-                                                , render'
                                                 )
 
 import           Control.Concurrent             ( forkIO
@@ -74,7 +73,7 @@ mainGame = do
             else return ""
       Nothing -> do
         updateState (0) -- Update Game State
-        render' -- Render Game
+        render -- Render Game
         --render' -- Render Game
         st <- lift get
         if gameStatus st then
