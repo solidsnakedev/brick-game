@@ -45,11 +45,11 @@ createEmptySpace n = mconcat ["|", replicate n ' ', "|"]
 rowsToString :: Int ->  [Object] -> String
 rowsToString column objects
   | null objects = createEmptySpace column
-  | otherwise = mconcat ["|", renderedRow, filledSpace, "|"]
+  | otherwise = mconcat ["|", renderedRow, fillSpace, "|"]
     where
       -- Sort objects by x position
-      get_XPos_IsBall = map (\x-> (fst $ objectPosition x, objectType x)) objects
-      sortedByXPos = sortBy (compare `on`fst) get_XPos_IsBall
+      getXPosAndType = map (\x-> (fst $ objectPosition x, objectType x)) objects
+      sortedByXPos = sortBy (compare `on`fst) getXPosAndType
       --objectXPos (Object (x, _) _) (Object (x', _) _) = compare x x'
 
       -- Calculate distance between x positions
@@ -70,7 +70,7 @@ rowsToString column objects
 
       -- get x positions from sorted object to  render remaining space
       onlyXPositions            = map fst sortedByXPos
-      filledSpace = mconcat $ replicate (column - last onlyXPositions) " "
+      fillSpace = mconcat $ replicate (column - last onlyXPositions) " "
 
 
 sortObjects :: [Object] -> [Object]
