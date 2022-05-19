@@ -1,17 +1,17 @@
 module Animation.Render
   ( createBoard
   , cleanScreen
-  , rowObjectsToString
-  ,renderObject
-  ,groupByRowObject
+  , rowsToString
+  , renderObject
+  , groupByRowObject
   , render
-  , createEmptySpace'
+  , createEmptySpace
   , getRowsWithObject
-  , listObjects
-  , getAllRows
+  , mkRowsWithObjects
+  , sortObjects
   ) where
 import           Animation.Env                  ( Env(..) )
-import           Animation.State                ( GameState(..), Object(..) )
+import           Animation.State                ( GameState(..), Object(..), ObjectType (..) )
 import           Control.Monad.State.Strict     ( MonadState(get, put)
                                                 , MonadTrans(lift)
                                                 , StateT(runStateT)
@@ -30,9 +30,6 @@ import           Debug.Trace
 import Prelude hiding (lookup)
 import qualified Data.Map.Strict as Map
 
-
-
-
 createBoard :: Int -> Int -> Int -> String
 createBoard n column size = mconcat
   [ "|"
@@ -42,32 +39,39 @@ createBoard n column size = mconcat
   , "|"
   ]
 
-createEmptySpace' :: Int -> String
-createEmptySpace' n = mconcat ["|", replicate n ' ', "|"]
+createEmptySpace :: Int -> String
+createEmptySpace n = mconcat ["|", replicate n ' ', "|"]
 
-rowObjectsToString :: Maybe [Object] -> String
-rowObjectsToString (Just list) = mconcat ["|", renderedRow, filledSpace, "|"]
- where
-  -- Sort objects by x position
-  get_XPos_IsBall = map (\x-> (fst $ objectPosition x, isBall x)) list
-  sortedByXPos = sortBy (compare `on`fst) get_XPos_IsBall
-  --objectXPos (Object (x, _) _) (Object (x', _) _) = compare x x'
+rowsToString :: Int ->  [Object] -> String
+rowsToString column objects
+  | null objects = createEmptySpace column
+  | otherwise = mconcat ["|", renderedRow, filledSpace, "|"]
+    where
+      -- Sort objects by x position
+      get_XPos_IsBall = map (\x-> (fst $ objectPosition x, objectType x)) objects
+      sortedByXPos = sortBy (compare `on`fst) get_XPos_IsBall
+      --objectXPos (Object (x, _) _) (Object (x', _) _) = compare x x'
 
-  -- Calculate distance between x positions
-  distBetweenXPos = zipWith (\(x,isBall) x'-> (x-x',isBall) ) sortedByXPos sortedByXPosOffSet
-  --substracXPos (Object (x,y) isBall) (Object (x',_) _) = Object (x-x',y) isBall
-  sortedByXPosOffSet = 0: init (map fst sortedByXPos)
-  --sortedByXPosOffSet = Object (0, 0) False : init sortedByXPos
+      -- Calculate distance between x positions
+      distBetweenXPos = zipWith (\(x,objectType) x'-> (x-x',objectType) ) sortedByXPos sortedByXPosOffSet
+      --substracXPos (Object (x,y) isBall) (Object (x',_) _) = Object (x-x',y) isBall
+      sortedByXPosOffSet = 0: init (map fst sortedByXPos)
+      --sortedByXPosOffSet = Object (0, 0) False : init sortedByXPos
 
-  -- With distance between positions calculated, then render object based on its type
-  renderedRow = mconcat $ map renderRow distBetweenXPos
-  --renderRow (Object (x, y) isBall) = replicate (x - 1) ' ' ++ if isBall then "*" else "="
-  renderRow (x,isBall) = replicate (x-1) ' ' ++ if isBall then "*" else "="
+      -- With distance between positions calculated, then render object based on its type
+      renderedRow = mconcat $ map renderRow distBetweenXPos
+      --renderRow (Object (x, y) isBall) = replicate (x - 1) ' ' ++ if isBall then "*" else "="
+      renderRow (x,objectType) = replicate (x-1) ' ' ++ checkBallBrick objectType
 
-  -- get x positions from sorted object to  render remaining space
-  onlyXPositions            = map fst sortedByXPos
-  filledSpace = mconcat $ replicate (10 - last onlyXPositions) " "
-rowObjectsToString Nothing = createEmptySpace' 10
+      checkBallBrick objectType =
+        case objectType of
+          Ball -> "*"
+          Brick -> "="
+
+      -- get x positions from sorted object to  render remaining space
+      onlyXPositions            = map fst sortedByXPos
+      filledSpace = mconcat $ replicate (column - last onlyXPositions) " "
+
 
 sortObjects :: [Object] -> [Object]
 sortObjects = sortBy (compare `on` snd . objectPosition)
@@ -78,16 +82,20 @@ groupByRowObject = groupBy (\x y -> snd (objectPosition x) == snd (objectPositio
 getRowsWithObject :: [Object] -> [Int]
 getRowsWithObject = nub . map (snd . objectPosition)
 
-listObjects :: [Object] -> [(Int, [Object])]
-listObjects list = zip (getRowsWithObject list) (groupByRowObject list)
+mkRowsWithObjects :: [Object] -> [(Int, [Object])]
+mkRowsWithObjects objects = zip (getRowsWithObject objects) (groupByRowObject objects)
 
--- Create Row if it's part of litObjects othewise return Nothing
-getAllRows :: [Object] -> [Maybe [Object]]
-getAllRows list = map (\x-> Map.lookup x (Map.fromList (listObjects list))) [0 .. 9]
+mkRows :: Int -> [Object] -> [[Object]]
+mkRows row ob = Map.elems $ Map.union rowsWithObjectsMap dummyMap
+  where
+    sortedObjects = sortObjects ob
+    rowsWithObjects = mkRowsWithObjects sortedObjects
+    rowsWithObjectsMap = Map.fromList rowsWithObjects
+    dummyMap = Map.fromList $ (\x-> (x,[])) <$> [0 .. row - 1]
 
 -- Render list of objects when these are grouped by y position
-renderObject :: [Object] -> String
-renderObject list = unlines $ zipWith (++) (map rowObjectsToString (getAllRows $ sortObjects list)) (show <$> [0..9]) 
+renderObject :: [Object] -> Int -> Int -> String
+renderObject objects row column = unlines $ zipWith (++) (map (rowsToString column) (mkRows row objects)) (show <$> [0..row -1]) 
 
 cleanScreen :: IO ()
 cleanScreen = putStr "\ESC[2J"
@@ -96,23 +104,16 @@ render :: ReaderT Env (StateT GameState IO) ()
 render = do
   state <- get
   env <- ask
-  game <- renderHelper' state env
+  game <- renderHelper state env
   --lift $ lift cleanScreen
   lift $ lift $ putStrLn $ game ++ "\n"
 
-renderHelper' :: GameState -> Env -> ReaderT Env (StateT GameState IO) String
-renderHelper' state env =  do
+renderHelper :: GameState -> Env -> ReaderT Env (StateT GameState IO) String
+renderHelper state env =  do
   let board = createBoard (boardPos state) (column env) (boardSize env)
   --let (ballPosX, ballPosY) = Map.filter "ball" (objectsMap state)
-  let newBox = renderObject (Map.elems $ objectsMap state)
+  let newBox = renderObject (Map.elems $ objectsMap state) (row env) (column env)
   return (mconcat [ newBox
                   , board,"\n"
-                  , show $ ballPos state
-                  , show $ boardPos state
-                  , show $ gameStatus state
-                  , show $ directionX state
-                  , show $ directionY state
-                  --, show $ objectsMap state
-                  , show $ collisions state
                   , debug state
                   ])
