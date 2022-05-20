@@ -6,7 +6,6 @@ module Animation.State
   , ObjectType (..)
   , initGameSate
   , updateState
-  , obMap
   , mkRandObjects
   ) where
 
@@ -64,47 +63,6 @@ mkRandObjects = do
   print objects
   return objects
 
-
-obMap :: Map.Map String Object
-obMap = Map.fromList
-  [ ("ball", Object (9, 2) Ball)
-  , ("box18", Object (1, 8) Brick)
-  , ("box33", Object (3, 3) Brick)
-  , ("box37", Object (3, 7) Brick)
-  , ("box81", Object (8, 1) Brick)
-  , ("box54", Object (5, 4) Brick)
-  , ("box16", Object (1, 6) Brick)
-  , ("box26", Object (2, 6) Brick)
-  , ("box36", Object (3, 6) Brick)
-  , ("box46", Object (4, 6) Brick)
-  , ("box56", Object (5, 6) Brick)
-  , ("box66", Object (6, 6) Brick)
-  , ("box76", Object (7, 6) Brick)
-  , ("box86", Object (8, 6) Brick)
-  , ("box15", Object (1, 5) Brick)
-  , ("box25", Object (2, 5) Brick)
-  , ("box35", Object (3, 5) Brick)
-  , ("box45", Object (4, 5) Brick)
-  , ("box55", Object (5, 5) Brick)
-  , ("box65", Object (6, 5) Brick)
-  , ("box75", Object (7, 5) Brick)
-  , ("box85", Object (8, 5) Brick)
-  , ("box12", Object (1, 2) Brick)
-  , ("box22", Object (2, 2) Brick)
-  , ("box32", Object (3, 2) Brick)
-  , ("box42", Object (4, 2) Brick)
-  , ("box52", Object (5, 2) Brick)
-  , ("box62", Object (6, 2) Brick)
-  , ("box72", Object (7, 2) Brick)
-  , ("box82", Object (8, 2) Brick)
-  , ("box10", Object (1, 0) Brick)
-  , ("box20", Object (2, 0) Brick)
-  , ("box30", Object (3, 0) Brick)
-  , ("box40", Object (4, 0) Brick)
-  , ("box50", Object (5, 0) Brick)
-  , ("box60", Object (6, 0) Brick)
-  , ("box70", Object (7, 0) Brick)
-  , ("box80", Object (8, 0) Brick)]
 
 initGameSate = do
     objects <- mkRandObjects
