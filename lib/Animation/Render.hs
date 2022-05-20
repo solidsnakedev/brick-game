@@ -65,7 +65,7 @@ rowsToString column objects
 
       checkBallBrick objectType =
         case objectType of
-          Ball -> "*"
+          Ball -> "o"
           Brick -> "="
 
       -- get x positions from sorted object to  render remaining space
@@ -115,5 +115,8 @@ renderHelper state env =  do
   let newBox = renderObject (Map.elems $ objectsMap state) (row env) (column env)
   return (mconcat [ newBox
                   , board,"\n"
+                  , "SCORE: "
+                  , show $ score state, "\n"
+                  , "Debug: "
                   , debug state
                   ])

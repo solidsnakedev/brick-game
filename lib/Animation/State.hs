@@ -41,6 +41,7 @@ data GameState = GameState
   , gameStatus :: Bool
   , objectsMap :: Map.Map String Object
   , collisions :: [String]
+  , score :: Int
   , debug :: String
   }
   deriving Show
@@ -113,6 +114,7 @@ initGameSate = do
                          , gameStatus = True
                          , objectsMap = objects
                          , collisions = []
+                         , score = 0
                          , debug = ""
                          }
 type KeyInput = Int
@@ -127,13 +129,14 @@ updateState keyInput = do
 
 
 updateStateHelper :: KeyInput -> Env -> GameState -> GameState
-updateStateHelper keyInput env@(Env column row boardSize) state@(GameState boardPos directionY directionX gameStatus objectsMap collisions lookAheadPos)
+updateStateHelper keyInput env@(Env column row boardSize) state@(GameState boardPos directionY directionX gameStatus objectsMap collisions score debug)
   = GameState { boardPos   = newBoardPos
               , directionY = newDirectionY
               , directionX = newDirectionX
               , gameStatus = newGameStatus
               , objectsMap = newObjects
               , collisions = newCollisions
+              , score = newScore
               , debug = mconcat [ show newPosX, " "
                                 , show newPosY, " "
                                 , show newDirectionX, " "
@@ -163,6 +166,8 @@ updateStateHelper keyInput env@(Env column row boardSize) state@(GameState board
   newCollisions = Map.keys $ Map.filterWithKey (\key value -> key /= "ball" && (newPosX, newPosY) == objectPosition value ) objectsMap
   -- If collision then delete Brick
   newObjectsMap = deleteBricks newCollisions objectsMap
+
+  newScore = if isCollision then score + 1 else score
 
   -- Create ball with new positions
   newBall = Object (newPosX, newPosY) Ball
