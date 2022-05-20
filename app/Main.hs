@@ -84,5 +84,6 @@ mainGame = do
 main = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
-  runStateT (runReaderT mainGame initGameEnv) initGameSate
+  iGameState <- initGameSate
+  runStateT (runReaderT mainGame initGameEnv) iGameState
 

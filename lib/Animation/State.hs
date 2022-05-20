@@ -7,6 +7,7 @@ module Animation.State
   , initGameSate
   , updateState
   , obMap
+  , mkRandObjects
   ) where
 
 import           Animation.Env                  ( Env(..) )
@@ -17,6 +18,7 @@ import           Control.Monad.State.Strict     ( MonadState(get, put)
 import           Control.Monad.Trans.Reader     ( ReaderT(runReaderT)
                                                 , ask
                                                 )
+import System.Random
 
 import qualified Data.Map.Strict as Map
 
@@ -42,6 +44,25 @@ data GameState = GameState
   , debug :: String
   }
   deriving Show
+
+
+getRandomObjects :: IO (Int, Int)
+getRandomObjects = do
+  randX <- randomRIO (1,10) :: IO Int
+  randY <- randomRIO (0,5) :: IO Int
+  return (randX, randY)
+
+mkRandObjects :: IO (Map.Map String Object)
+mkRandObjects = do
+  brickList <- mapM (\_-> getRandomObjects) [1..30]
+  let ob = map (\x -> Object x Brick) brickList
+  let bricks = map (\object -> ("brick" ++ show (objectPosition object), object)) ob
+  ballPos <- getRandomObjects
+  let ball = Object ballPos Ball
+  let objects = Map.fromList $ ("ball", ball) : bricks
+  print objects
+  return objects
+
 
 obMap :: Map.Map String Object
 obMap = Map.fromList
@@ -84,11 +105,13 @@ obMap = Map.fromList
   , ("box70", Object (7, 0) Brick)
   , ("box80", Object (8, 0) Brick)]
 
-initGameSate = GameState { boardPos   = 0
+initGameSate = do
+    objects <- mkRandObjects
+    return $ GameState { boardPos   = 0
                          , directionY = GoUp
                          , directionX = GoLeft
                          , gameStatus = True
-                         , objectsMap = obMap
+                         , objectsMap = objects
                          , collisions = []
                          , debug = ""
                          }
@@ -127,7 +150,7 @@ updateStateHelper keyInput env@(Env column row boardSize) state@(GameState board
   isBoardAligned = newBoardPos <= posX && posX <= (newBoardPos + boardSize)
   -- Get new Y direction, based on either ball position and row borders or any collision
   newDirectionY  = calcDirectionY directionY posY row isBoardAligned isCollision
-  
+
   -- Get new X direction, based on ball position  and column borders
   newDirectionX = calcDirectionX directionX posX column
 
@@ -150,13 +173,13 @@ updateStateHelper keyInput env@(Env column row boardSize) state@(GameState board
   newGameStatus = newPosY < row
 
 calcDirectionY :: (Ord a, Num a) => DirectionY -> a -> a -> Bool -> Bool -> DirectionY
-calcDirectionY directionY posY row isBoardAligned isCollision = 
+calcDirectionY directionY posY row isBoardAligned isCollision =
   case directionY of
     GoUp -> if posY <= 0 || isCollision then GoDown else GoUp
     GoDown -> if posY == row-1  && isBoardAligned || isCollision then GoUp else GoDown
 
 calcDirectionX :: (Ord a, Num a) => DirectionX -> a -> a -> DirectionX
-calcDirectionX directionX posX column = 
+calcDirectionX directionX posX column =
   case directionX of
     GoLeft  -> if posX <= 1  then GoRight else GoLeft
     GoRight -> if posX >= column  then GoLeft else GoRight
