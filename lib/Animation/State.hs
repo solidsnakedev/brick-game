@@ -46,18 +46,18 @@ data GameState = GameState
   deriving Show
 
 
-getRandomObjects :: IO (Int, Int)
-getRandomObjects = do
+getRandPos :: IO (Int, Int)
+getRandPos = do
   randX <- randomRIO (1,10) :: IO Int
   randY <- randomRIO (0,5) :: IO Int
   return (randX, randY)
 
 mkRandObjects :: IO (Map.Map String Object)
 mkRandObjects = do
-  brickList <- mapM (\_-> getRandomObjects) [1..30]
+  brickList <- mapM (\_-> getRandPos) [1..30]
   let ob = map (\x -> Object x Brick) brickList
   let bricks = map (\object -> ("brick" ++ show (objectPosition object), object)) ob
-  ballPos <- getRandomObjects
+  ballPos <- getRandPos
   let ball = Object ballPos Ball
   let objects = Map.fromList $ ("ball", ball) : bricks
   print objects
