@@ -7,4 +7,4 @@ data Env = Env
   }
   deriving Show
 
-initGameEnv = Env 10 10 3
+initGameEnv = Env 30 20 5

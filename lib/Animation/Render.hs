@@ -105,7 +105,7 @@ render = do
   state <- get
   env <- ask
   game <- renderHelper state env
-  --lift $ lift cleanScreen
+  lift $ lift cleanScreen
   lift $ lift $ putStrLn $ game ++ "\n"
 
 renderHelper :: GameState -> Env -> ReaderT Env (StateT GameState IO) String

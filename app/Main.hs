@@ -46,7 +46,7 @@ mainGame = do
 
  where
   wait threadVar  = do
-    lift $ lift $ threadDelay (1000000 `div` 3)
+    lift $ lift $ threadDelay (1000000 `div` 5)
     mVar <- lift $ lift $ tryTakeMVar threadVar
     case mVar of
       Just var -> case var of
