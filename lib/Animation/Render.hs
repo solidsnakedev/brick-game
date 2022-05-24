@@ -42,6 +42,9 @@ createBoard n column size = mconcat
 createEmptySpace :: Int -> String
 createEmptySpace n = mconcat ["|", replicate n ' ', "|"]
 
+createTop :: Int -> String
+createTop n = mconcat ["|", replicate n '-', "|"]
+
 rowsToString :: Int ->  [Object] -> String
 rowsToString column objects
   | null objects = createEmptySpace column
@@ -95,7 +98,10 @@ mkRows row ob = Map.elems $ Map.union rowsWithObjectsMap dummyMap
 
 -- Render list of objects when these are grouped by y position
 renderObject :: [Object] -> Int -> Int -> String
-renderObject objects row column = unlines $ zipWith (++) (map (rowsToString column) (mkRows row objects)) (show <$> [0..row -1]) 
+renderObject objects row column = unlines $ createTop column : mainScreen
+  where
+    mainScreen' = map (rowsToString column) (mkRows row objects)
+    mainScreen = zipWith (++) mainScreen' (show <$> [0..row -1])
 
 cleanScreen :: IO ()
 cleanScreen = putStr "\ESC[2J"
