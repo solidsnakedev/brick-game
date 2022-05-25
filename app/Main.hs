@@ -1,10 +1,14 @@
 module Main where
 import           Animation                      ( Env(..)
                                                 , GameState(..)
+                                                , GameStatus(..)
+                                                , UserInput(..)
+                                                , checkGameStatus
                                                 , initGameEnv
                                                 , initGameSate
-                                                , updateState
+                                                , parseUserInput
                                                 , render
+                                                , updateState
                                                 )
 
 import           Control.Concurrent             ( forkIO
@@ -45,45 +49,30 @@ mainGame = do
   wait newVar
 
  where
-  wait threadVar  = do
+  wait threadVar = do
     lift $ lift $ threadDelay (1000000 `div` 6)
     mVar <- lift $ lift $ tryTakeMVar threadVar
-    case mVar of
-      Just var -> case var of
-        'a' -> do
-          updateState (-1) -- Update Game State
-          render -- Render Game
-          st <- lift get
-          if gameStatus st then
-            mainGame
-            else lift $ lift $ putStrLn "Game Over!!"
-        'd' -> do
-          updateState (1) -- Update Game State 
-          render -- Render Game
-          st <- lift get
-          if gameStatus st then
-            mainGame
-            else lift $ lift $ putStrLn "Game Over!!"
-        'q' -> do
-          lift $lift $ putStrLn "End Game"
-        _ -> do
-          render -- Render Game
-          st <- lift get
-          if gameStatus st then
-            mainGame
-            else lift $ lift $ putStrLn "Game Over!!"
-      Nothing -> do
-        updateState (0) -- Update Game State
+    case parseUserInput mVar of
+      MoveLeft -> do
+        updateState (-1) -- Update Game State
         render -- Render Game
-        --render' -- Render Game
-        st <- lift get
-        if gameStatus st then
-          wait threadVar
-          else lift $lift $ putStrLn "Game Over!!"
+        checkGameStatus mainGame "Game Over!!"
+      MoveRight -> do
+        updateState 1 -- Update Game State 
+        render -- Render Game
+        checkGameStatus mainGame "Game Over!!"
+      Quit -> do
+        lift $ lift $ putStrLn "End Game"
+      InvalidInput -> do
+        render -- Render Game
+        checkGameStatus mainGame "Game Over!!"
+      NoInput -> do
+        updateState 0 -- Update Game State
+        render -- Render Game
+        checkGameStatus (wait threadVar) "Game Over!!"
 
 main = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
   iGameState <- initGameSate
   runStateT (runReaderT mainGame initGameEnv) iGameState
-

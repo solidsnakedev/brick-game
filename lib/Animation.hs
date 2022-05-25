@@ -1,10 +1,14 @@
 module Animation
   ( Env(..)
-  , initGameEnv
   , GameState(..)
+  , UserInput(..)
+  , GameStatus(..)
+  , initGameEnv
   , initGameSate
   , updateState
   , render
+  , parseUserInput
+  , checkGameStatus
   ) where
 
 import           Animation.Env

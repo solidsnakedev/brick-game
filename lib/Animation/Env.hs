@@ -1,4 +1,7 @@
-module Animation.Env (Env(..), initGameEnv) where
+module Animation.Env
+  ( Env(..)
+  , initGameEnv
+  ) where
 
 data Env = Env
   { column    :: Int

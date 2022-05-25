@@ -4,9 +4,13 @@ module Animation.State
   , DirectionX(..)
   , Object (..)
   , ObjectType (..)
+  , UserInput (..)
+  , GameStatus (..)
   , initGameSate
   , updateState
   , mkRandObjects
+  , parseUserInput
+  , checkGameStatus
   ) where
 
 import           Animation.Env                  ( Env(..) )
@@ -20,6 +24,11 @@ import           Control.Monad.Trans.Reader     ( ReaderT(runReaderT)
 import System.Random
 
 import qualified Data.Map.Strict as Map
+
+
+data UserInput = MoveLeft | MoveRight | Quit | InvalidInput | NoInput deriving Show
+
+data GameStatus = Running | EndGame deriving (Show, Eq)
 
 data DirectionY = GoUp | GoDown deriving (Show, Enum, Eq)
 
@@ -37,7 +46,7 @@ data GameState = GameState
   { boardPos   :: Int
   , directionY :: DirectionY
   , directionX :: DirectionX
-  , gameStatus :: Bool
+  , gameStatus :: GameStatus
   , objectsMap :: Map.Map String Object
   , collisions :: [String]
   , score :: Int
@@ -69,7 +78,7 @@ initGameSate = do
     return $ GameState { boardPos   = 0
                          , directionY = GoUp
                          , directionX = GoLeft
-                         , gameStatus = True
+                         , gameStatus = Running
                          , objectsMap = objects
                          , collisions = []
                          , score = 0
@@ -132,8 +141,8 @@ updateStateHelper keyInput env@(Env column row boardSize) state@(GameState board
   -- Update ball positions
   newObjects = Map.adjust (\_ -> newBall) "ball" newObjectsMap
 
-  -- Finally check if ball when beyond row position
-  newGameStatus = newPosY < row
+  -- Finally check if ball went beyond row position
+  newGameStatus = if newPosY > row then EndGame else Running
 
 calcDirectionY :: (Ord a, Num a) => DirectionY -> a -> a -> Bool -> Bool -> DirectionY
 calcDirectionY directionY posY row isBoardAligned isCollision =
@@ -157,3 +166,20 @@ calcPosY directionY posY = if directionY == GoDown then posY + 1 else abs (posY 
 deleteBricks :: Ord k => [k] -> Map.Map k a -> Map.Map k a
 deleteBricks [] obMap = obMap
 deleteBricks (x:xs) obMap = deleteBricks xs (Map.delete x obMap)
+
+parseUserInput :: Maybe Char -> UserInput
+parseUserInput (Just userInput) =
+  case userInput of
+    'a' -> MoveLeft
+    'd' -> MoveRight
+    'q' -> Quit
+    _   -> InvalidInput
+parseUserInput Nothing = NoInput
+
+checkGameStatus :: ReaderT Env (StateT GameState IO) () -> String -> ReaderT Env (StateT GameState IO) ()
+checkGameStatus returnFuction exitMessage = do
+  state <- lift get
+  if gameStatus state == Running then
+    returnFuction
+    else lift $ lift $ putStrLn exitMessage
+

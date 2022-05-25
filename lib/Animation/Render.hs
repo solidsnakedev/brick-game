@@ -75,7 +75,6 @@ rowsToString column objects
       onlyXPositions            = map fst sortedByXPos
       fillSpace = mconcat $ replicate (column - last onlyXPositions) " "
 
-
 sortObjects :: [Object] -> [Object]
 sortObjects = sortBy (compare `on` snd . objectPosition)
 -- Group object based on position y
