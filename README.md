@@ -1,7 +1,7 @@
 # brick-game
 
 [![Haskell CI](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml/badge.svg)](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml)
-
+```
 |------------------------------|
 |       ==   ==                |0
 |   ==  =   = ==    =      == =|1
@@ -26,3 +26,4 @@
 |:::::                         |
 SCORE: 0
 Debug: 17 5 GoLeft GoDown ["brick(17,5)"]0
+```
