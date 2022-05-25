@@ -6,11 +6,12 @@ module Animation.State
   , ObjectType (..)
   , UserInput (..)
   , GameStatus (..)
-  , initGameSate
+  , initGameState
   , updateState
   , mkRandObjects
   , parseUserInput
   , checkGameStatus
+  , checkBoardBoundaries
   ) where
 
 import           Animation.Env                  ( Env(..) )
@@ -73,7 +74,7 @@ mkRandObjects = do
   return objects
 
 
-initGameSate = do
+initGameState = do
     objects <- mkRandObjects
     return $ GameState { boardPos   = 0
                          , directionY = GoUp
@@ -108,11 +109,13 @@ updateStateHelper keyInput env@(Env column row boardSize) state@(GameState board
                                 , show newPosY, " "
                                 , show newDirectionX, " "
                                 , show newDirectionY, " "
-                                , show newCollisions]
+                                , show newCollisions
+                                , show boardPos]
               }
  where
   -- Key input reference : (-1) left , (1) Right , 0 do nothing
-  newBoardPos    = boardPos + keyInput
+  newBoardPos    = checkBoardBoundaries boardPos boardSize keyInput column
+    -- boardPos + keyInput
   -- Get ball position
   (posX, posY) = maybe (error "ball is missing") objectPosition (Map.lookup "ball" objectsMap)
 
@@ -183,3 +186,8 @@ checkGameStatus returnFuction exitMessage = do
     returnFuction
     else lift $ lift $ putStrLn exitMessage
 
+checkBoardBoundaries :: (Ord a, Num a) => a -> a -> a -> a -> a
+checkBoardBoundaries boardPos boardSize keyInput column
+  | boardPos + keyInput >= 0 && boardPos + boardSize + keyInput <= column = boardPos + keyInput
+  | boardPos + keyInput < 0 = 0
+  | otherwise = column - boardSize

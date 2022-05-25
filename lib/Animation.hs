@@ -4,7 +4,7 @@ module Animation
   , UserInput(..)
   , GameStatus(..)
   , initGameEnv
-  , initGameSate
+  , initGameState
   , updateState
   , render
   , parseUserInput

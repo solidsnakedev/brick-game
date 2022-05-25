@@ -5,7 +5,7 @@ import           Animation                      ( Env(..)
                                                 , UserInput(..)
                                                 , checkGameStatus
                                                 , initGameEnv
-                                                , initGameSate
+                                                , initGameState
                                                 , parseUserInput
                                                 , render
                                                 , updateState
@@ -74,5 +74,5 @@ mainGame = do
 main = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
-  iGameState <- initGameSate
+  iGameState <- initGameState
   runStateT (runReaderT mainGame initGameEnv) iGameState
