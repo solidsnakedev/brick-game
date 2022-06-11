@@ -2,9 +2,9 @@
 
 ## Keyboard Control Board
 Board can be move left `a` or right `d` , discard any other input execpt `q` to exit the game
-a -> Move Left
-d -> Move Right
-q -> Exit Game
+* a -> Move Left
+* d -> Move Right
+* q -> Exit Game
 
 ## Set Board Size
 ### Board size can be set in the below file
