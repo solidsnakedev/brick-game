@@ -3,7 +3,7 @@
 # brick-game
 
 ## Keyboard Control Board
-Board can be move left `a` or right `d` , discard any other input execpt `q` to exit the game
+Board can be move left `a` or right `d` , discard any other input except `q` to exit the game
 * a -> Move Left
 * d -> Move Right
 * q -> Exit Game
