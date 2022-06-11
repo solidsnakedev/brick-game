@@ -1,3 +1,5 @@
+[![Haskell CI](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml/badge.svg)](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml)
+
 # brick-game
 
 ## Keyboard Control Board
@@ -22,7 +24,7 @@ brick-game/lib/Animation/State.hs
 brickList <- mapM (\_-> getRandPos) [1..70]
 ```
 
-[![Haskell CI](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml/badge.svg)](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml)
+
 ```
 |------------------------------|
 |       ==   ==                |0
