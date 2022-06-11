@@ -1,5 +1,27 @@
 # brick-game
 
+## Keyboard Control Board
+Board can be move left `a` or right `d` , discard any other input execpt `q` to exit the game
+a -> Move Left
+d -> Move Right
+q -> Exit Game
+
+## Set Board Size
+### Board size can be set in the below file
+brick-game/lib/Animation/Env.hs
+`Line 13`
+```
+initGameEnv = Env 30 20 5
+```
+
+## Set number of bricks
+### Number of bricks can be assigned in the below file
+brick-game/lib/Animation/State.hs
+`Line 67`
+```
+brickList <- mapM (\_-> getRandPos) [1..70]
+```
+
 [![Haskell CI](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml/badge.svg)](https://github.com/solidsnakedev/brick-game/actions/workflows/haskell.yml)
 ```
 |------------------------------|
